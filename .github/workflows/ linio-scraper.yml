@@ -28,7 +28,7 @@ jobs:
 
     - name: Run scraper
       env:
-        INPUT_PRODUCT: "laptop" # Aquí puedes configurar un producto predeterminado
+        INPUT_PRODUCT: "laptop" # configurar un producto predeterminado
       run: |
         echo "Automating Linio Scraper"
         python -c "
