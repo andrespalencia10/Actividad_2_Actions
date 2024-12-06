@@ -35,7 +35,7 @@ jobs:
         fi
 
     - name: Upload CSV file as artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3  # Actualización a la versión v3
       with:
         name: linio-scraped-data
         path: linio_scraped_data.csv
