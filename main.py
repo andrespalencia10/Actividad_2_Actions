@@ -1,12 +1,11 @@
-import time
 import requests
-from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
-import pandas as pd
+import csv
+import argparse
 
 class LinioScraper:
-    def __init__(self, base_url):
-        self.base_url = base_url
+    def __init__(self):
+        self.base_url = "https://www.linio.com.co/search?scroll=&q="  # Cambia la URL para Colombia
         self.data = []
 
     def scraping(self, product_name):
@@ -18,64 +17,65 @@ class LinioScraper:
             page_number += 1
 
         self.data = []
+        c = 1
+
         for i, url in enumerate(urls, start=1):
-            try:
-                response = self.get_url_with_retries(url)
-                soup = BeautifulSoup(response.text, 'html.parser')
-                content = soup.find_all('div', class_='catalogue-product')
+            response = requests.get(url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            content = soup.find_all('div', class_='catalogue-product')
 
-                if not content:
-                    print("\nNo hay más contenido para scrapear.")
-                    break
+            if not content:
+                print(f"\nNo hay más contenido en la página {i}. URL: {url}")
+                continue
 
-                print(f"\nScrapeando página número {i}. {url}")
+            print(f"\nScrapeando página número {i}. {url}")
 
-                for post in content:
-                    title = post.find('a', class_='title-section').text.strip()
-                    price = post.find('span', class_='price-main-md').text.strip()
-                    post_link = post.find("a", class_='title-section')["href"]
-                    post_link = "https://www.linio.com.co" + post_link
+            for post in content:
+                title = post.find('a', class_='title-section').text.strip()
+                price = post.find('span', class_='price-main-md').text.strip()
+                post_link = post.find("a", class_='title-section')["href"]
+                post_link = "https://www.linio.com.co" + post_link
 
-                    try:
-                        img_link = post.find("img")["data-lazy"]
-                    except:
-                        img_link = post.find("img")["src"]
+                try:
+                    img_link = post.find("img")["data-lazy"]
+                except:
+                    img_link = post.find("img")["src"]
 
-                    post_data = {
-                        "title": title,
-                        "price": price,
-                        "post link": post_link,
-                        "image link": img_link
-                    }
+                post_data = {
+                    "title": title,
+                    "price": price,
+                    "post link": post_link,
+                    "image link": img_link
+                }
 
-                    self.data.append(post_data)
-            except RequestException as e:
-                print(f"Error al realizar la solicitud a {url}: {e}")
-                break
+                self.data.append(post_data)
+                c += 1
 
-    def get_url_with_retries(self, url, retries=3, delay=5):
-        for i in range(retries):
-            try:
-                return requests.get(url)
-            except RequestException as e:
-                print(f"Intento {i+1} fallido: {e}")
-                if i < retries - 1:
-                    print(f"Reintentando en {delay} segundos...")
-                    time.sleep(delay)
-                else:
-                    raise
+        # Verifica si la lista de datos está vacía
+        if not self.data:
+            print("\nNo se encontraron productos para el término de búsqueda.")
+        else:
+            print(f"\nSe encontraron {len(self.data)} productos.")
+        
+        self.export_to_csv()
 
     def export_to_csv(self):
-        df = pd.DataFrame(self.data)
-        df.to_csv("linio_colombia_scraped_data.csv", sep=";", index=False)
+        try:
+            with open("linio_scraped_data.csv", "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=["title", "price", "post link", "image link"])
+                writer.writeheader()
+                writer.writerows(self.data)
+            print("\nDatos exportados correctamente a 'linio_scraped_data.csv'")
+        except Exception as e:
+            print(f"\nError al guardar el archivo CSV: {e}")
 
-if __name__ == "__main__":
-    import argparse
-
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--product', type=str, required=True, help="Producto a buscar")
+    parser.add_argument('--product', required=True, help='Producto a buscar')
     args = parser.parse_args()
 
-    scraper = LinioScraper(base_url="https://www.linio.com.co/search?scroll=&q=")  # URL para Colombia
+    scraper = LinioScraper()
     scraper.scraping(args.product)
-    scraper.export_to_csv()
+
+if __name__ == "__main__":
+    main()
