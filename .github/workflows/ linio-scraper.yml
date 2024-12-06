@@ -1,50 +1,43 @@
-name: Linio Scraper CI/CD
+name: Scraping Linio
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  linio-scraper-job:
+  scraping:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Clonar el repositorio
-    - name: Check out repository
-      uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    # 2. Configurar Python
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v2
       with:
         python-version: '3.9'
 
-    # 3. Instalar dependencias necesarias
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install requests beautifulsoup4 pandas
+        pip install requests beautifulsoup4
 
-    # 4. Ejecutar el scraper con los argumentos especificados
-    - name: Run Linio Scraper
+    - name: Run scraping script
       run: |
         python main.py --product "laptop"
 
-    - name: Check if CSV file was created
+    - name: Check if CSV file exists
       run: |
         if [ ! -f linio_scraped_data.csv ]; then
-          echo "Error: CSV file was not generated"
+          echo "CSV file was not generated"
           exit 1
         fi
-        echo "CSV file generated successfully!"
 
-    - name: Upload CSV as artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload CSV file as artifact
+      uses: actions/upload-artifact@v2
       with:
         name: linio-scraped-data
         path: linio_scraped_data.csv
+
 
