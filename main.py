@@ -5,7 +5,7 @@ import argparse
 
 class LinioScraper:
     def __init__(self):
-        self.base_url = "https://www.linio.com.co/search?scroll=&q="  # Cambia la URL para Colombia
+        self.base_url = "https://www.linio.com.co/search?scroll=&q="  
         self.data = []
 
     def scraping(self, product_name):
