@@ -1,42 +1,23 @@
+import argparse
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-import os
 
-class LinioScraper():
+class LinioScraper:
     def __init__(self):
         self.base_url = None
         self.data = []
 
-    def menu(self):
-        menu = ("""
-    Escoge el país:
-    1. Argentina
-    2. Chile
-    3. Colombia
-    4. México
-        """)
-        valid_options = list(range(1, 5))
+    def set_country(self, country_code):
+        urls = {
+            1: 'https://www.linio.com.ar/search?scroll=&q=',
+            2: 'https://www.linio.cl/search?scroll=&q=',
+            3: 'https://www.linio.com.co/search?scroll=&q=',
+            4: 'https://www.linio.com.mx/search?scroll=&q=',
+        }
+        self.base_url = urls[country_code]
 
-        while True:
-            print(menu)
-            opcion = int(input('Número de país (Ejemplo: 3): '))
-
-            if opcion in valid_options:
-                urls = {
-                    1: 'https://www.linio.com.ar/search?scroll=&q=',
-                    2: 'https://www.linio.cl/search?scroll=&q=',
-                    3: 'https://www.linio.com.co/search?scroll=&q=',
-                    4: 'https://www.linio.com.mx/search?scroll=&q=',
-                }
-
-                self.base_url = urls[opcion]
-                break
-            else:
-                print("Escoge un número del 1 al 4")
-
-    def scraping(self):
-        product_name = input("\nProducto: ")
+    def scraping(self, product_name):
         cleaned_name = product_name.replace(" ", "+").lower()
         urls = [self.base_url + cleaned_name]
         page_number = 2
@@ -45,7 +26,6 @@ class LinioScraper():
             page_number += 1
 
         self.data = []
-        c = 1
 
         for i, url in enumerate(urls, start=1):
             response = requests.get(url)
@@ -77,14 +57,18 @@ class LinioScraper():
                 }
 
                 self.data.append(post_data)
-                c += 1
 
     def export_to_csv(self):
         df = pd.DataFrame(self.data)
         df.to_csv("linio_scraped_data.csv", sep=";")
 
 if __name__ == "__main__":
-    s = LinioScraper()
-    s.menu()
-    s.scraping()
-    s.export_to_csv()
+    parser = argparse.ArgumentParser(description="Linio Scraper")
+    parser.add_argument("--country", type=int, required=True, help="Número del país (1: Argentina, 2: Chile, 3: Colombia, 4: México)")
+    parser.add_argument("--product", type=str, required=True, help="Nombre del producto a buscar")
+    args = parser.parse_args()
+
+    scraper = LinioScraper()
+    scraper.set_country(args.country)
+    scraper.scraping(args.product)
+    scraper.export_to_csv()
