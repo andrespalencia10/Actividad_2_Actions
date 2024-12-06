@@ -32,7 +32,7 @@ jobs:
     # 4. Ejecutar el scraper con los argumentos especificados
     - name: Run Linio Scraper
       run: |
-        python main.py --country 4 --product "laptop"
+        python main.py --product "laptop"
 
     - name: Check if CSV file was created
       run: |
