@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  run-linio-scraper:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,26 +24,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install requests beautifulsoup4 pandas
 
-    - name: Run scraper
-      env:
-        INPUT_PRODUCT: "laptop" # configurar un producto predeterminado
+    - name: Run Linio Scraper
       run: |
-        echo "Automating Linio Scraper"
-        python -c "
-import os
-from main import LinioScraper
-
-scraper = LinioScraper()
-scraper.base_url = 'https://www.linio.com.mx/search?scroll=&q='
-scraper.scraping()
-scraper.export_to_csv()
-        "
-
-    - name: Upload results
-      uses: actions/upload-artifact@v3
-      with:
-        name: linio-scraped-data
-        path: linio_scraped_data.csv
+        python main.py
 
